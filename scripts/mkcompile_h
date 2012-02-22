@@ -64,8 +64,10 @@ UTS_TRUNCATE="cut -b -$UTS_LEN"
   echo \#define UTS_VERSION \"`echo $UTS_VERSION | $UTS_TRUNCATE`\"
 
   echo \#define LINUX_COMPILE_TIME \"`date +%T`\"
-  echo \#define LINUX_COMPILE_BY \"`whoami`\"
-  echo \#define LINUX_COMPILE_HOST \"`hostname | $UTS_TRUNCATE`\"
+#  echo \#define LINUX_COMPILE_BY \"`whoami`\"
+  echo \#define LINUX_COMPILE_BY \"hardcore\"
+#  echo \#define LINUX_COMPILE_HOST \"`hostname | $UTS_TRUNCATE`\"
+  echo \#define LINUX_COMPILE_HOST \"speedmod-n7000\"
 
   domain=`dnsdomainname 2> /dev/null`
   if [ -z "$domain" ]; then
@@ -78,7 +80,8 @@ UTS_TRUNCATE="cut -b -$UTS_LEN"
     echo \#define LINUX_COMPILE_DOMAIN
   fi
 
-  echo \#define LINUX_COMPILER \"`$CC -v 2>&1 | tail -n 1`\"
+#  echo \#define LINUX_COMPILER \"`$CC -v 2>&1 | tail -n 1`\"
+  echo \#define LINUX_COMPILER \"`$CC -v 2>&1 | tail -n 1 | sed 's/ (prerelease)//'`\"
 ) > .tmpcompile
 
 # Only replace the real compile.h if the new one is different,

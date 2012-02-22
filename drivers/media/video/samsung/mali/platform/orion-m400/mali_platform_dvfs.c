@@ -56,8 +56,8 @@
 	#define GPU_DVFS_UP_THRESHOLD	((int)((255*55)/100))   // 55%
 	#define GPU_DVFS_DOWN_THRESHOLD	((int)((255*25)/100))   // 25%
 #else
-	#define GPU_DVFS_UP_THRESHOLD	((int)((255*85)/100))   // 65%
-	#define GPU_DVFS_DOWN_THRESHOLD	((int)((255*75)/100))   // 30%
+	#define GPU_DVFS_UP_THRESHOLD	((int)((255*85)/100)) //85 // 65%
+	#define GPU_DVFS_DOWN_THRESHOLD	((int)((255*50)/100)) //75 // 30%
 #endif
 #endif
 static int bMaliDvfsRun=0;
@@ -83,7 +83,7 @@ int mali_dvfs_control=0;
 mali_dvfs_table mali_dvfs[MALI_DVFS_STEPS]={
 #ifdef CONFIG_CPU_S5PV310_EVT1
 #ifdef CONFIG_S5PV310_ASV
-                   /*step 0*/{160  ,1000000    ,1000000},
+                   /*step 0*/{200  ,1000000    ,1000000},
                    /*step 1*/{267  ,1000000    ,1100000} };
 #else
 		   /*step 0*/{160  ,1000000    , 950000},

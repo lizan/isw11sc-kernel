@@ -903,9 +903,9 @@ static void update_gamma(int gamma_value)
 		gprintk(" gamma_value(%d) is invalid \n", gamma_value);
 	}
 	
-	if(on_19gamma)
-		panel_gamma_send_sequence(ams403gf01_19gamma_set_tbl[gamma_value], AMS403GF01_GAMMA_PARAM_SET_DATA_COUNT);
-	else
+	//if(on_19gamma)
+	//	panel_gamma_send_sequence(ams403gf01_19gamma_set_tbl[gamma_value], AMS403GF01_GAMMA_PARAM_SET_DATA_COUNT);
+	//else
 		panel_gamma_send_sequence(ams403gf01_22gamma_set_tbl[gamma_value], AMS403GF01_GAMMA_PARAM_SET_DATA_COUNT);     
 
 	current_gamma_value = gamma_value;

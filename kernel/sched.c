@@ -299,7 +299,7 @@ static int root_task_group_empty(void)
  *  limitation from this.)
  */
 #define MIN_SHARES	2
-#define MAX_SHARES	(1UL << 18)
+#define MAX_SHARES	(1UL << (18 + SCHED_LOAD_RESOLUTION))
 
 static int init_task_group_load = INIT_TASK_GROUP_LOAD;
 #endif
@@ -1320,15 +1320,26 @@ calc_delta_mine(unsigned long delta_exec, unsigned long weight,
 {
 	u64 tmp;
 
+	/*
+	 * weight can be less than 2^SCHED_LOAD_RESOLUTION for task group sched
+	 * entities since MIN_SHARES = 2. Treat weight as 1 if less than
+	 * 2^SCHED_LOAD_RESOLUTION.
+	 */
+	if (likely(weight > (1UL << SCHED_LOAD_RESOLUTION)))
+		tmp = (u64)delta_exec * scale_load_down(weight);
+	else
+		tmp = (u64)delta_exec;	
+	
 	if (!lw->inv_weight) {
-		if (BITS_PER_LONG > 32 && unlikely(lw->weight >= WMULT_CONST))
+		unsigned long w = scale_load_down(lw->weight);
+		if (BITS_PER_LONG > 32 && unlikely(w >= WMULT_CONST))
 			lw->inv_weight = 1;
+		else if (unlikely(!w))
+			lw->inv_weight = WMULT_CONST;
 		else
-			lw->inv_weight = 1 + (WMULT_CONST-lw->weight/2)
-				/ (lw->weight+1);
+			lw->inv_weight = WMULT_CONST / w;
 	}
 
-	tmp = (u64)delta_exec * weight;
 	/*
 	 * Check whether we'd overflow the 64-bit multiplication:
 	 */
@@ -1856,17 +1867,20 @@ static void dec_nr_running(struct rq *rq)
 
 static void set_load_weight(struct task_struct *p)
 {
+	int prio = p->static_prio - MAX_RT_PRIO;
+	struct load_weight *load = &p->se.load;
+
 	/*
 	 * SCHED_IDLE tasks get minimal weight:
 	 */
 	if (p->policy == SCHED_IDLE) {
-		p->se.load.weight = WEIGHT_IDLEPRIO;
-		p->se.load.inv_weight = WMULT_IDLEPRIO;
+		load->weight = scale_load(WEIGHT_IDLEPRIO);
+		load->inv_weight = WMULT_IDLEPRIO;
 		return;
 	}
 
-	p->se.load.weight = prio_to_weight[p->static_prio - MAX_RT_PRIO];
-	p->se.load.inv_weight = prio_to_wmult[p->static_prio - MAX_RT_PRIO];
+	load->weight = scale_load(prio_to_weight[prio]);
+	load->inv_weight = prio_to_wmult[prio];
 }
 
 static void enqueue_task(struct rq *rq, struct task_struct *p, int flags)
@@ -5910,6 +5924,9 @@ migration_call(struct notifier_block *nfb, unsigned long action, void *hcpu)
 		break;
 #endif
 	}
+
+	update_max_interval();
+
 	return NOTIFY_OK;
 }
 
@@ -6044,7 +6061,7 @@ static int sched_domain_debug_one(struct sched_domain *sd, int cpu, int level,
 		cpulist_scnprintf(str, sizeof(str), sched_group_cpus(group));
 
 		printk(KERN_CONT " %s", str);
-		if (group->cpu_power != SCHED_LOAD_SCALE) {
+		if (group->cpu_power != SCHED_POWER_SCALE) {
 			printk(KERN_CONT " (cpu_power = %d)",
 				group->cpu_power);
 		}
@@ -7750,7 +7767,7 @@ void __init sched_init(void)
 #ifdef CONFIG_SMP
 		rq->sd = NULL;
 		rq->rd = NULL;
-		rq->cpu_power = SCHED_LOAD_SCALE;
+		rq->cpu_power = SCHED_POWER_SCALE;
 		rq->post_schedule = 0;
 		rq->active_balance = 0;
 		rq->next_balance = jiffies;
@@ -8728,14 +8745,14 @@ cpu_cgroup_attach(struct cgroup_subsys *ss, struct cgroup *cgrp,
 static int cpu_shares_write_u64(struct cgroup *cgrp, struct cftype *cftype,
 				u64 shareval)
 {
-	return sched_group_set_shares(cgroup_tg(cgrp), shareval);
+	return sched_group_set_shares(cgroup_tg(cgrp), scale_load(shareval));
 }
 
 static u64 cpu_shares_read_u64(struct cgroup *cgrp, struct cftype *cft)
 {
 	struct task_group *tg = cgroup_tg(cgrp);
 
-	return (u64) tg->shares;
+	return (u64) scale_load_down(tg->shares);
 }
 #endif /* CONFIG_FAIR_GROUP_SCHED */
 

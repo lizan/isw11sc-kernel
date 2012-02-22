@@ -131,4 +131,3 @@ obj-$(CONFIG_SND_SOC_WM9090)	+= snd-soc-wm9090.o
 obj-$(CONFIG_SND_SOC_S5M8751)	+= snd-soc-s5m8751.o
 
 obj-$(CONFIG_SND_SOC_MC1N2)     += mc1n2/
-

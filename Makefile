@@ -189,7 +189,8 @@ SUBARCH := $(shell uname -m | sed -e s/i.86/i386/ -e s/sun4u/sparc64/ \
 # Note: Some architectures assign CROSS_COMPILE in their arch/*/Makefile
 export KBUILD_BUILDHOST := $(SUBARCH)
 ARCH		?= arm
-CROSS_COMPILE	?= /opt/toolchains/arm-2009q3/bin/arm-none-linux-gnueabi-
+#CROSS_COMPILE	?= /opt/toolchains/arm-2009q3/bin/arm-none-linux-gnueabi-
+CROSS_COMPILE	?= /home/kernel/android-toolchain-eabi-4-5/bin/arm-eabi-
 CROSS_COMPILE	?= $(CONFIG_CROSS_COMPILE:"%"=%)
 
 # Architecture as present in compile.h
@@ -353,7 +354,20 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-strict-aliasing -fno-common \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security \
-		   -fno-delete-null-pointer-checks
+		   -fno-delete-null-pointer-checks \
+                -marm -march=armv7-a -mtune=cortex-a9 \
+                -mfpu=neon -mfloat-abi=softfp \
+		-ffast-math -ftree-vectorize \
+		-floop-interchange -floop-strip-mine -floop-block \
+                -pipe
+
+                #-ffast-math -ftree-vectorize \
+		#-funroll-loops \
+		#-floop-interchange -floop-strip-mine -floop-block \
+		#-finline-functions -funswitch-loops -fpredictive-commoning \
+		#-fno-tree-vectorize -fno-gcse-after-reload -fno-ipa-cp-clone \
+
+
 #change@wtl.kSingh - enabling FIPS mode - starts
 ifeq ($(USE_SEC_FIPS_MODE),true)
 KBUILD_CFLAGS += -DSEC_FIPS_ENABLED
